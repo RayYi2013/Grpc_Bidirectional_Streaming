@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option csharp_namespace = "ChatGrpc";
+
+package chat;
+
+// Service definition for bidirectional chat
+service BidirectionalChat {
+  // Bidirectional streaming RPC for real-time chat communication
+  rpc Chat (stream ChatMessage) returns (stream ChatMessage);
+}
+
+// Message structure for chat communication
+message ChatMessage {
+  string content = 1;    // The message content
+  string sender = 2;     // Sender identifier: "Client" or "Server"
+  int64 timestamp = 3;   // Unix timestamp in milliseconds
+}

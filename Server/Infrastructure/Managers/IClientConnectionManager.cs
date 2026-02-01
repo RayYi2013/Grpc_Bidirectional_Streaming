@@ -32,9 +32,8 @@ public interface IClientConnectionManager
     /// Number of currently connected clients.
     /// </summary>
     int ConnectedClientsCount { get; }
-
     /// <summary>
-    /// Event raised when connected clients count changes.
+    /// Stream that produces connected clients count updates.
     /// </summary>
-    event EventHandler<int>? ConnectedClientsCountChanged;
+    IObservable<int> ConnectedClientsCountChanged { get; }
 }

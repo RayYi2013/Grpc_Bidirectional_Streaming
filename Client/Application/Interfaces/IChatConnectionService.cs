@@ -14,9 +14,9 @@ public interface IChatConnectionService : IDisposable
     ConnectionStatus Status { get; }
 
     /// <summary>
-    /// Event raised when connection status changes.
+    /// Observable stream that emits connection status updates.
     /// </summary>
-    event EventHandler<ConnectionStatus>? StatusChanged;
+    IObservable<ConnectionStatus> StatusChanged { get; }
 
     /// <summary>
     /// Establishes connection to the gRPC server.

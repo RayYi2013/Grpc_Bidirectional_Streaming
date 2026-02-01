@@ -17,9 +17,9 @@ public class MessageReceivedEventArgs(ChatMessageDto message) : EventArgs
 public interface IBroadcastService
 {
     /// <summary>
-    /// Event raised when a message is received from any client.
+    /// Stream of messages received from clients (reactive).
     /// </summary>
-    event EventHandler<MessageReceivedEventArgs>? MessageReceived;
+    IObservable<ChatMessageDto> Messages { get; }
 
     /// <summary>
     /// Broadcasts a message to all connected clients.
@@ -32,7 +32,6 @@ public interface IBroadcastService
     int ConnectedClientsCount { get; }
 
     /// <summary>
-    /// Event raised when connected clients count changes.
-    /// </summary>
-    event EventHandler<int>? ConnectedClientsCountChanged;
+    /// Observable stream for connected clients count changes.
+    IObservable<int> ConnectedClientsCountChanged { get; }
 }

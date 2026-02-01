@@ -16,6 +16,11 @@
     <!-- Modern WPF UI Library -->
     <PackageReference Include="WPF-UI" Version="3.0.5" />
     
+    <!-- Reactive libraries -->
+    <PackageReference Include="System.Reactive" Version="5.0.0" />
+    <PackageReference Include="ReactiveUI" Version="17.3.0" />
+    <PackageReference Include="ReactiveUI.WPF" Version="17.3.0" />
+    
     <!-- gRPC Client -->
     <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
     <PackageReference Include="Google.Protobuf" Version="3.29.2" />

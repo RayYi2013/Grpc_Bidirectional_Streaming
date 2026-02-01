@@ -2,6 +2,8 @@ using ChatGrpc;
 using Grpc.Core;
 using Server.Infrastructure.Managers;
 using Server.Infrastructure.Mappers;
+using System.Reactive.Subjects;
+using System.Reactive.Linq;
 
 namespace Server.Infrastructure.GrpcServices;
 
@@ -13,6 +15,9 @@ public class BidirectionalChatService(IClientConnectionManager connectionManager
     : BidirectionalChat.BidirectionalChatBase
 {
     private readonly IClientConnectionManager _connectionManager = connectionManager;
+    private readonly Subject<ChatMessage> _messageSubject = new();
+
+    public IObservable<ChatMessage> MessageReceivedFromClient => _messageSubject.AsObservable();
 
     /// <summary>
     /// Handles bidirectional streaming for a single client.
@@ -33,8 +38,8 @@ public class BidirectionalChatService(IClientConnectionManager connectionManager
                 // Broadcast to all connected clients (including sender)
                 await _connectionManager.BroadcastToAllFromClientAsync(message, clientId, context.CancellationToken);
 
-                // Raise event for UI (handled by BroadcastService)
-                MessageReceivedFromClient?.Invoke(this, message);
+                // Publish message to subscribers (handled by BroadcastService)
+                _messageSubject.OnNext(message);
             }
         }
         finally
@@ -48,5 +53,5 @@ public class BidirectionalChatService(IClientConnectionManager connectionManager
     /// Event raised when a message is received from any client.
     /// Used by BroadcastService to notify ViewModel.
     /// </summary>
-    public event EventHandler<ChatMessage>? MessageReceivedFromClient;
+    // Removed event in favor of reactive IObservable `MessageReceivedFromClient`.
 }

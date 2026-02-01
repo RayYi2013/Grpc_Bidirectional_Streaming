@@ -21,23 +21,23 @@ public partial class MainWindow
         Loaded += (s, e) => LoadWindowPlacement();
 
         // Show a simple notification when new messages arrive
-        viewModel.Messages.CollectionChanged += (s, e) =>
-        {
-            if (e.NewItems != null)
-            {
-                foreach (var item in e.NewItems)
-                {
-                    if (item is Server.Application.DTOs.ChatMessageDto msg && !string.Equals(msg.Sender, "System", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Show a brief info box on UI thread for non-system messages
-                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            MessageBox.Show($"{msg.Sender}: {msg.Content}", "Server Get New Message", MessageBoxButton.OK, MessageBoxImage.Information);
-                        });
-                    }
-                }
-            }
-        };
+        // viewModel.Messages.CollectionChanged += (s, e) =>
+        // {
+        //     if (e.NewItems != null)
+        //     {
+        //         foreach (var item in e.NewItems)
+        //         {
+        //             if (item is Server.Application.DTOs.ChatMessageDto msg && !string.Equals(msg.Sender, "System", StringComparison.OrdinalIgnoreCase))
+        //             {
+        //                 // Show a brief info box on UI thread for non-system messages
+        //                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        //                 {
+        //                     MessageBox.Show($"{msg.Sender}: {msg.Content}", "Server Get New Message", MessageBoxButton.OK, MessageBoxImage.Information);
+        //                 });
+        //             }
+        //         }
+        //     }
+        // };
 
         // Handle window closing to cleanup resources
         Closing += async (s, e) =>

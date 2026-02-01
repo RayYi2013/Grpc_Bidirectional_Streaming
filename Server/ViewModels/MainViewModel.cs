@@ -16,6 +16,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 {
     private readonly IServerHostService _serverHostService;
     private readonly IBroadcastService _broadcastService;
+    private IDisposable? _broadcastMessagesSubscription;
+    private IDisposable? _clientsCountSubscription;
 
     [ObservableProperty]
     private string _currentMessage = string.Empty;
@@ -45,10 +47,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _serverHostService = serverHostService;
         _broadcastService = broadcastService;
 
-        // Subscribe to events
+        // Subscribe to server status event and reactive broadcast streams
         _serverHostService.StatusChanged += OnServerStatusChanged;
-        _broadcastService.MessageReceived += OnMessageReceived;
-        _broadcastService.ConnectedClientsCountChanged += OnConnectedClientsCountChanged;
+        _broadcastMessagesSubscription = _broadcastService.Messages.Subscribe(OnMessageReceived);
+        _clientsCountSubscription = _broadcastService.ConnectedClientsCountChanged.Subscribe(HandleConnectedClientsCountChanged);
     }
 
     partial void OnCurrentMessageChanged(string value)
@@ -161,16 +163,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
         BroadcastMessageCommand.NotifyCanExecuteChanged();
     }
 
-    private void OnMessageReceived(object? sender, MessageReceivedEventArgs e)
+    private void OnMessageReceived(Server.Application.DTOs.ChatMessageDto message)
     {
         // Update UI on UI thread
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
-            Messages.Add(e.Message);
+            Messages.Add(message);
         });
     }
 
-    private void OnConnectedClientsCountChanged(object? sender, int count)
+    private void HandleConnectedClientsCountChanged(int count)
     {
         // Update UI on UI thread
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
@@ -182,8 +184,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         _serverHostService.StatusChanged -= OnServerStatusChanged;
-        _broadcastService.MessageReceived -= OnMessageReceived;
-        _broadcastService.ConnectedClientsCountChanged -= OnConnectedClientsCountChanged;
+        _broadcastMessagesSubscription?.Dispose();
+        _clientsCountSubscription?.Dispose();
         _serverHostService.Dispose();
     }
 }

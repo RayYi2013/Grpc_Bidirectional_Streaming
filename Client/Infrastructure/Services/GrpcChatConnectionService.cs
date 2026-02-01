@@ -3,6 +3,8 @@ using Client.Application.Interfaces;
 using Client.Infrastructure.Factories;
 using Client.Infrastructure.Managers;
 using Grpc.Net.Client;
+using System.Reactive.Subjects;
+using System.Reactive.Linq;
 
 namespace Client.Infrastructure.Services;
 
@@ -17,6 +19,7 @@ public class GrpcChatConnectionService : IChatConnectionService
     private GrpcChannel? _channel;
     private ConnectionStatus _status = ConnectionStatus.Disconnected;
     private bool _disposed;
+    private readonly BehaviorSubject<ConnectionStatus> _statusSubject;
 
     public ConnectionStatus Status
     {
@@ -26,17 +29,18 @@ public class GrpcChatConnectionService : IChatConnectionService
             if (_status != value)
             {
                 _status = value;
-                StatusChanged?.Invoke(this, value);
+                _statusSubject.OnNext(_status);
             }
         }
     }
 
-    public event EventHandler<ConnectionStatus>? StatusChanged;
+    public IObservable<ConnectionStatus> StatusChanged => _statusSubject.AsObservable();
 
     public GrpcChatConnectionService(IGrpcChannelFactory channelFactory, IGrpcStreamManager streamManager)
     {
         _channelFactory = channelFactory;
         _streamManager = streamManager;
+        _statusSubject = new BehaviorSubject<ConnectionStatus>(_status);
     }
 
     public async Task<Result> ConnectAsync(string serverAddress, CancellationToken ct = default)
@@ -87,6 +91,7 @@ public class GrpcChatConnectionService : IChatConnectionService
         if (_disposed) return;
 
         DisconnectAsync().GetAwaiter().GetResult();
+        _statusSubject.Dispose();
         _disposed = true;
     }
 }

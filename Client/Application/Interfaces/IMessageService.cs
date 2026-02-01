@@ -5,21 +5,16 @@ namespace Client.Application.Interfaces;
 /// <summary>
 /// Event arguments for message received events.
 /// </summary>
-public class MessageReceivedEventArgs(ChatMessageDto message) : EventArgs
-{
-    public ChatMessageDto Message { get; } = message;
-}
-
 /// <summary>
 /// Interface for sending and receiving chat messages (ISP, SRP).
-/// Separated from connection management for better testability.
+/// Exposes a reactive `IObservable` stream for incoming messages.
 /// </summary>
 public interface IMessageService
 {
     /// <summary>
-    /// Event raised when a message is received from the server.
+    /// Stream of incoming messages from the server.
     /// </summary>
-    event EventHandler<MessageReceivedEventArgs>? MessageReceived;
+    IObservable<ChatMessageDto> Messages { get; }
 
     /// <summary>
     /// Sends a message to the server.

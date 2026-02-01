@@ -4,6 +4,7 @@ using Server.Application.Interfaces;
 using Server.Infrastructure.GrpcServices;
 using Server.Infrastructure.Managers;
 using Server.Infrastructure.Mappers;
+using System.Reactive.Linq;
 
 namespace Server.Infrastructure.Services;
 
@@ -18,8 +19,11 @@ public class GrpcBroadcastService : IBroadcastService
 
     public int ConnectedClientsCount => _connectionManager.ConnectedClientsCount;
 
-    public event EventHandler<MessageReceivedEventArgs>? MessageReceived;
-    public event EventHandler<int>? ConnectedClientsCountChanged;
+    
+    private readonly IObservable<ChatMessageDto> _messages;
+    public IObservable<ChatMessageDto> Messages => _messages;
+    
+    public IObservable<int> ConnectedClientsCountChanged => _connectionManager.ConnectedClientsCountChanged;
 
     public GrpcBroadcastService(
         IClientConnectionManager connectionManager,
@@ -28,15 +32,8 @@ public class GrpcBroadcastService : IBroadcastService
         _connectionManager = connectionManager;
         _chatService = chatService;
 
-        // Subscribe to events
-        _connectionManager.ConnectedClientsCountChanged += (s, count) =>
-            ConnectedClientsCountChanged?.Invoke(this, count);
-
-        _chatService.MessageReceivedFromClient += (s, message) =>
-        {
-            var dto = ChatMessageMapper.ToDto(message);
-            MessageReceived?.Invoke(this, new MessageReceivedEventArgs(dto));
-        };
+        // Map chat service messages to DTO stream
+        _messages = _chatService.MessageReceivedFromClient.Select(m => ChatMessageMapper.ToDto(m));
     }
 
     public async Task<Result> BroadcastMessageAsync(string content, CancellationToken ct = default)

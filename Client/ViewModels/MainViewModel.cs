@@ -16,6 +16,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 {
     private readonly IChatConnectionService _connectionService;
     private readonly IMessageService _messageService;
+    private IDisposable? _statusSubscription;
+    private IDisposable? _messagesSubscription;
 
     [ObservableProperty]
     private string _serverAddress = "http://localhost:5001";
@@ -45,9 +47,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _connectionService = connectionService;
         _messageService = messageService;
 
-        // Subscribe to events
-        _connectionService.StatusChanged += OnConnectionStatusChanged;
-        _messageService.MessageReceived += OnMessageReceived;
+        // Subscribe to reactive streams
+        _statusSubscription = _connectionService.StatusChanged.Subscribe(OnConnectionStatusChanged);
+        _messagesSubscription = _messageService.Messages.Subscribe(OnMessageReceived);
     }
 
     partial void OnCurrentMessageChanged(string value)
@@ -145,7 +147,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private bool CanSendMessage() => IsConnected && !string.IsNullOrWhiteSpace(CurrentMessage);
 
-    private void OnConnectionStatusChanged(object? sender, Application.DTOs.ConnectionStatus status)
+    private void OnConnectionStatusChanged(Application.DTOs.ConnectionStatus status)
     {
         ConnectionStatus = status.ToString();
         ConnectButtonText = status == Application.DTOs.ConnectionStatus.Connected ? "Disconnect" : "Connect";
@@ -165,19 +167,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SendMessageCommand.NotifyCanExecuteChanged();
     }
 
-    private void OnMessageReceived(object? sender, MessageReceivedEventArgs e)
+    private void OnMessageReceived(Client.Application.DTOs.ChatMessageDto message)
     {
         // Update UI on UI thread
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
-            Messages.Add(e.Message);
+            Messages.Add(message);
         });
     }
 
     public void Dispose()
     {
-        _connectionService.StatusChanged -= OnConnectionStatusChanged;
-        _messageService.MessageReceived -= OnMessageReceived;
+        _statusSubscription?.Dispose();
+        _messagesSubscription?.Dispose();
         _connectionService.Dispose();
     }
 }

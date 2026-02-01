@@ -1,6 +1,8 @@
 using ChatGrpc;
 using Grpc.Core;
 using System.Collections.Concurrent;
+using System.Reactive.Subjects;
+using System.Reactive.Linq;
 
 namespace Server.Infrastructure.Managers;
 
@@ -12,21 +14,21 @@ public class ClientConnectionManager : IClientConnectionManager
     private readonly ConcurrentDictionary<Guid, IServerStreamWriter<ChatMessage>> _clients = new();
 
     public int ConnectedClientsCount => _clients.Count;
-
-    public event EventHandler<int>? ConnectedClientsCountChanged;
+    private readonly BehaviorSubject<int> _countSubject = new(0);
+    public IObservable<int> ConnectedClientsCountChanged => _countSubject.AsObservable();
 
     public Guid RegisterClient(IServerStreamWriter<ChatMessage> responseStream)
     {
         var clientId = Guid.NewGuid();
         _clients.TryAdd(clientId, responseStream);
-        ConnectedClientsCountChanged?.Invoke(this, ConnectedClientsCount);
+        _countSubject.OnNext(ConnectedClientsCount);
         return clientId;
     }
 
     public void UnregisterClient(Guid clientId)
     {
         _clients.TryRemove(clientId, out _);
-        ConnectedClientsCountChanged?.Invoke(this, ConnectedClientsCount);
+        _countSubject.OnNext(ConnectedClientsCount);
     }
 
     public async Task BroadcastToAllAsync(ChatMessage message, CancellationToken ct = default)

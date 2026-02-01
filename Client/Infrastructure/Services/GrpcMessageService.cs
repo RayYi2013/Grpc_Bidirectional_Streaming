@@ -3,6 +3,8 @@ using Client.Application.DTOs;
 using Client.Application.Interfaces;
 using Client.Infrastructure.Managers;
 using Client.Infrastructure.Mappers;
+using System.Reactive.Subjects;
+using System.Reactive.Linq;
 
 namespace Client.Infrastructure.Services;
 
@@ -16,7 +18,9 @@ public class GrpcMessageService : IMessageService
     private CancellationTokenSource? _readCts;
     private Task? _readTask;
 
-    public event EventHandler<MessageReceivedEventArgs>? MessageReceived;
+    private readonly Subject<ChatMessageDto> _messageSubject = new();
+
+    public IObservable<ChatMessageDto> Messages => _messageSubject.AsObservable();
 
     public GrpcMessageService(IGrpcStreamManager streamManager)
     {
@@ -43,6 +47,8 @@ public class GrpcMessageService : IMessageService
     {
         _readCts?.Cancel();
         _readTask = null;
+        // optionally signal completion to subscribers
+        //_messageSubject.OnCompleted();
     }
 
     public async Task<Result> SendMessageAsync(string content, CancellationToken ct = default)
@@ -67,7 +73,7 @@ public class GrpcMessageService : IMessageService
             await foreach (var message in _streamManager.ReadMessagesAsync(ct))
             {
                 var dto = ChatMessageMapper.ToDto(message);
-                MessageReceived?.Invoke(this, new MessageReceivedEventArgs(dto));
+                _messageSubject.OnNext(dto);
             }
         }
         catch (OperationCanceledException)

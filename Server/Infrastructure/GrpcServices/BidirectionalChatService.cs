@@ -31,7 +31,7 @@ public class BidirectionalChatService(IClientConnectionManager connectionManager
             await foreach (var message in requestStream.ReadAllAsync(context.CancellationToken))
             {
                 // Broadcast to all connected clients (including sender)
-                await _connectionManager.BroadcastToAllAsync(message, context.CancellationToken);
+                await _connectionManager.BroadcastToAllFromClientAsync(message, clientId, context.CancellationToken);
 
                 // Raise event for UI (handled by BroadcastService)
                 MessageReceivedFromClient?.Invoke(this, message);

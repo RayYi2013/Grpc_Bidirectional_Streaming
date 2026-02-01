@@ -24,6 +24,11 @@ public interface IClientConnectionManager
     Task BroadcastToAllAsync(ChatMessage message, CancellationToken ct = default);
 
     /// <summary>
+    /// Broadcasts a message to all connected clients except the originating client.
+    /// </summary>
+    Task BroadcastToAllFromClientAsync(ChatMessage message, Guid fromClientId, CancellationToken ct = default);
+
+    /// <summary>
     /// Number of currently connected clients.
     /// </summary>
     int ConnectedClientsCount { get; }

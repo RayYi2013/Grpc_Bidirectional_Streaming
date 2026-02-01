@@ -52,4 +52,31 @@ public class ClientConnectionManager : IClientConnectionManager
             UnregisterClient(clientId);
         }
     }
+
+    public async Task BroadcastToAllFromClientAsync(ChatMessage message, Guid fromClientId, CancellationToken ct = default)
+    {
+        var failedClients = new List<Guid>();
+
+        foreach (var (clientId, stream) in _clients)
+        {
+            if (clientId == fromClientId)
+                continue;
+
+            try
+            {
+                await stream.WriteAsync(message, ct);
+            }
+            catch
+            {
+                // Mark client for removal if write fails
+                failedClients.Add(clientId);
+            }
+        }
+
+        // Remove failed clients
+        foreach (var clientId in failedClients)
+        {
+            UnregisterClient(clientId);
+        }
+    }
 }

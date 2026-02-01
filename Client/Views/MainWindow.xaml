@@ -23,7 +23,7 @@
         </Grid.RowDefinitions>
 
 <ui:TitleBar x:Name="AppTitleBar"
-                 Title="gRPC Server for Bidirectional Streaming"
+                 Title="gRPC Client for Bidirectional Streaming"
                  Grid.Row="0"
                  Margin="0,0,0,16"/>
 

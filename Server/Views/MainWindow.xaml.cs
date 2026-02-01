@@ -32,7 +32,7 @@ public partial class MainWindow
                         // Show a brief info box on UI thread for non-system messages
                         System.Windows.Application.Current.Dispatcher.Invoke(() =>
                         {
-                            MessageBox.Show($"{msg.Sender}: {msg.Content}", "New Message", MessageBoxButton.OK, MessageBoxImage.Information);
+                            MessageBox.Show($"{msg.Sender}: {msg.Content}", "Server Get New Message", MessageBoxButton.OK, MessageBoxImage.Information);
                         });
                     }
                 }

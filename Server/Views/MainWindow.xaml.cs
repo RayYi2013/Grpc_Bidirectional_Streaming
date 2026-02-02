@@ -42,9 +42,19 @@ public partial class MainWindow
         // Handle window closing to cleanup resources
         Closing += async (s, e) =>
         {
-            SaveWindowPlacement();
-            await viewModel.StopServerAsync();
-            viewModel.Dispose();
+            e.Cancel = true;                     // ← prevent immediate close
+
+    SaveWindowPlacement();
+
+    await viewModel.StopServerAsync();   // this calls host.StopAsync + waits
+
+    // Optional: give a tiny bit more time if needed
+    await Task.Delay(200);
+
+    viewModel.Dispose();
+
+    // Now really close
+    global::System.Windows.Application.Current.Shutdown();
         };
     }
 
